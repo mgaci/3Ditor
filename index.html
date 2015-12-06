@@ -13,6 +13,8 @@
 				overflow: hidden;
 			}
 			#info {
+				font-size: 18px;
+				font-weight: bold;
 				position: absolute;
 				top: 10px;
 				width: 100%;
@@ -20,7 +22,6 @@
 				z-index: 100;
 				display:block;
 			}
-			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
 		</style>
 	</head>
 	
@@ -28,20 +29,13 @@
 
 		<script src="utils/three.min.js"></script>
 		<script src="utils/Detector.js"></script>
-		<script src="utils/stats.min.js"></script>
 		<script src="utils/TextGeometry.js"></script>
 		<script src="utils/FontUtils.js"></script>
 
 		<script src="fonts/droid_sans_bold.typeface.js"></script> 
 		
-		<!-- 
-		<script src="fonts/optimer_bold.typeface.js"></script>
-		<script src="fonts/droid_serif_bold.typeface.js"></script>
-		<script src="fonts/gentilis_bold.typeface.js"></script>
-		<script src="fonts/helvetiker_bold.typeface.js"></script>
-		-->
 		<div id="info">
-			<span>Some intro text ....</span>
+			<span>Welcome to 3D Messaging !!!</span> </br>
 		</div>
 
 		<script type="x-shader/x-vertex" id="vertexshader">
@@ -84,7 +78,7 @@
 
 			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-			var container, stats, hex, color;
+			var container, color;
 
 			var camera, scene, renderer;
 
@@ -123,14 +117,6 @@
 			init();
 			animate();
 
-			function decimalToHex( d ) {
-
-				var hex = Number( d ).toString( 16 );
-				hex = "000000".substr( 0, 6 - hex.length ) + hex;
-				return hex.toUpperCase();
-
-			}
-
 			function init() {
 
 				container = document.createElement( 'div' );
@@ -151,10 +137,6 @@
 
 				// LIGHTS
 
-				/*var dirLight = new THREE.DirectionalLight( 0xffffff, 0.125 );
-				dirLight.position.set( 0, 0, 1 ).normalize();
-				scene.add( dirLight );  */
-
 				var pointLight = new THREE.PointLight( 0xffffff, 1.5 );
 				pointLight.position.set( 0, 100, 90 );
 				scene.add( pointLight );
@@ -165,15 +147,13 @@
 
 				if ( hash.length !== 0 ) {
 
-					var colorhash  = hash.substring( 0, 6 );
+					var colorhash  = hash.substring( 0);
 					var fonthash   = hash.substring( 6, 7 );
 					var weighthash = hash.substring( 7, 8 );
-					var pphash 	   = hash.substring( 8, 9 );
 					var bevelhash  = hash.substring( 9, 10 );
 					var texthash   = hash.substring( 10 );
 
-					hex = colorhash;
-					pointLight.color.setHex( parseInt( colorhash, 16 ) );
+					pointLight.color.setHex( parseInt( colorhash) );
 
 					font = parseInt( fonthash );
 					
@@ -182,13 +162,7 @@
 					bevelEnabled = parseInt( bevelhash );
 
 					text = decodeURI( texthash );
-
-				} else {
-
-					pointLight.color.setHSL( Math.random(), 1, 0.5 );
-					hex = decimalToHex( pointLight.color.getHex() );
-
-				}
+				} 
 
 				group = new THREE.Group();
 				group.position.y = 120;
@@ -208,16 +182,9 @@
 				// RENDERER
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setClearColor( scene.fog.color );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
-
-				// STATS
-
-				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.top = '0px';
 
 				// EVENTS
 
@@ -241,15 +208,8 @@
 				windowHalfY = window.innerHeight / 2;
 
 				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
-			}
-
-			function boolToNum( b ) {
-
-				return b ? 1 : 0;
-
 			}
 
 			function onDrop( e ) {
@@ -386,13 +346,9 @@
 					color.toArray( customColor.array, i * customColor.itemSize );
 
 				}
-
-				textGeo.center();
-				textGeo.computeBoundingBox();
-				textGeo.computeVertexNormals();
-
+				
 				var centerOffset = 0 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
-
+				
 				textMesh1 = new THREE.Line( buffergeometry, shaderMaterial );
 
 				textMesh1.position.x = centerOffset;
@@ -483,9 +439,6 @@
 				requestAnimationFrame( animate );
 
 				render();
-
-				stats.update();
-
 			}
 
 			
