@@ -31,8 +31,8 @@
 		<script src="utils/Detector.js"></script>
 		<script src="utils/TextGeometry.js"></script>
 		<script src="utils/FontUtils.js"></script>
-
-		<script src="fonts/droid_sans_bold.typeface.js"></script> 
+ 
+		<script src="fonts/droid_sans_bold.typeface.js"></script>
 		
 		<div id="info">
 			<span>Welcome to 3D Messaging !!!</span> </br>
@@ -82,7 +82,6 @@
 
 			var camera, scene, renderer;
 
-
 			var group, cameraTarget, textMesh1, textGeo, material;
 
 			var firstLetter = true;
@@ -101,7 +100,7 @@
 				bevelEnabled = true,
 				steps = 40,
 
-				font = "droid sans", //font = "droid sans, helvetiker, optimer",
+				font = "droid sans", 
 				weight = "bold", 
 				style = "normal"; 
 
@@ -125,58 +124,23 @@
 				// CAMERA
 
 				camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 1500 );
-				camera.position.set( 0, 400, 700 );
+				camera.position.set( 0, 200, 700 );
 
-				cameraTarget = new THREE.Vector3( 0, 150, 0 );
-
-
-				// SCENE
+				cameraTarget = new THREE.Vector3( 0, 0, 0 );
 
 				scene = new THREE.Scene();
-				scene.fog = new THREE.Fog( 0x000000, 250, 1400 );
-
-				// LIGHTS
-
-				var pointLight = new THREE.PointLight( 0xffffff, 1.5 );
-				pointLight.position.set( 0, 100, 90 );
-				scene.add( pointLight );
-
-				// Get text from hash
-
-				var hash = document.location.hash.substr( 1 );
-
-				if ( hash.length !== 0 ) {
-
-					var colorhash  = hash.substring( 0);
-					var fonthash   = hash.substring( 6, 7 );
-					var weighthash = hash.substring( 7, 8 );
-					var bevelhash  = hash.substring( 9, 10 );
-					var texthash   = hash.substring( 10 );
-
-					pointLight.color.setHex( parseInt( colorhash) );
-
-					font = parseInt( fonthash );
-					
-					weight = parseInt( weighthash );
-
-					bevelEnabled = parseInt( bevelhash );
-
-					text = decodeURI( texthash );
-				} 
 
 				group = new THREE.Group();
-				group.position.y = 120;
 
 				scene.add( group );
 
 				createText();
 
 				var plane = new THREE.Mesh(
-					new THREE.PlaneBufferGeometry( 10000, 10000 ),
-					new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 0.5, transparent: true } )
+					new THREE.PlaneBufferGeometry( 2000, 1000 ),
+					new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 0, transparent: true } )
 				);
-				plane.position.y = 100;
-				plane.rotation.x = - Math.PI / 2;
+
 				scene.add( plane );
 
 				// RENDERER
@@ -302,7 +266,8 @@
 
 				});
 
-				textGeo = new THREE.TextGeometry( text, {
+				textGeo = new THREE.TextGeometry( text, 
+				{
 
 					size: size,
 					height: height,
@@ -346,14 +311,8 @@
 					color.toArray( customColor.array, i * customColor.itemSize );
 
 				}
-				
-				var centerOffset = 0 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
-				
+								
 				textMesh1 = new THREE.Line( buffergeometry, shaderMaterial );
-
-				textMesh1.position.x = centerOffset;
-				textMesh1.position.y = hover;
-				textMesh1.position.z = 0;
 
 				group.add( textMesh1 );
 
@@ -431,8 +390,6 @@
 				}
 
 			}
-
-			//
 
 			function animate() {
 
