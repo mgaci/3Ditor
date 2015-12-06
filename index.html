@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Particles Font</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+		</style>
+	</head>
+	
+	<body>
+
+		<script src="utils/three.min.js"></script>
+		<script src="utils/Detector.js"></script>
+		<script src="utils/stats.min.js"></script>
+		<script src="utils/TextGeometry.js"></script>
+		<script src="utils/FontUtils.js"></script>
+
+		<script src="fonts/droid_sans_bold.typeface.js"></script> 
+		
+		<!-- 
+		<script src="fonts/optimer_bold.typeface.js"></script>
+		<script src="fonts/droid_serif_bold.typeface.js"></script>
+		<script src="fonts/gentilis_bold.typeface.js"></script>
+		<script src="fonts/helvetiker_bold.typeface.js"></script>
+		-->
+		<div id="info">
+			<span>Some intro text ....</span>
+		</div>
+
+		<script type="x-shader/x-vertex" id="vertexshader">
+
+			uniform float amplitude;
+
+			attribute vec3 displacement;
+			attribute vec3 customColor;
+
+			varying vec3 vColor;
+
+			void main() {
+
+				vec3 newPosition = position + amplitude * displacement;
+
+				vColor = customColor;
+
+				gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
+
+			}
+
+		</script>
+
+		<script type="x-shader/x-fragment" id="fragmentshader">
+
+			uniform vec3 color;
+			uniform float opacity;
+
+			varying vec3 vColor;
+
+			void main() {
+
+				gl_FragColor = vec4( vColor * color, opacity );
+
+			}
+
+		</script>
+
+		<script>
+
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var container, stats, hex, color;
+
+			var camera, scene, renderer;
+
+
+			var group, cameraTarget, textMesh1, textGeo, material;
+
+			var firstLetter = true;
+
+			var text = "Welcome!",
+
+				height = 20, 
+				size = 70,  
+				hover = 30,  
+
+				curveSegments = 10,   
+
+				bevelThickness = 5,   
+				bevelSize = 1.5,   
+				bevelSegments = 10,  
+				bevelEnabled = true,
+				steps = 40,
+
+				font = "droid sans", //font = "droid sans, helvetiker, optimer",
+				weight = "bold", 
+				style = "normal"; 
+
+			var targetRotation = 0;
+			var targetRotationOnMouseDown = 0;
+
+			var mouseX = 0;
+			var mouseXOnMouseDown = 0;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+			init();
+			animate();
+
+			function decimalToHex( d ) {
+
+				var hex = Number( d ).toString( 16 );
+				hex = "000000".substr( 0, 6 - hex.length ) + hex;
+				return hex.toUpperCase();
+
+			}
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				// CAMERA
+
+				camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 1500 );
+				camera.position.set( 0, 400, 700 );
+
+				cameraTarget = new THREE.Vector3( 0, 150, 0 );
+
+
+				// SCENE
+
+				scene = new THREE.Scene();
+				scene.fog = new THREE.Fog( 0x000000, 250, 1400 );
+
+				// LIGHTS
+
+				/*var dirLight = new THREE.DirectionalLight( 0xffffff, 0.125 );
+				dirLight.position.set( 0, 0, 1 ).normalize();
+				scene.add( dirLight );  */
+
+				var pointLight = new THREE.PointLight( 0xffffff, 1.5 );
+				pointLight.position.set( 0, 100, 90 );
+				scene.add( pointLight );
+
+				// Get text from hash
+
+				var hash = document.location.hash.substr( 1 );
+
+				if ( hash.length !== 0 ) {
+
+					var colorhash  = hash.substring( 0, 6 );
+					var fonthash   = hash.substring( 6, 7 );
+					var weighthash = hash.substring( 7, 8 );
+					var pphash 	   = hash.substring( 8, 9 );
+					var bevelhash  = hash.substring( 9, 10 );
+					var texthash   = hash.substring( 10 );
+
+					hex = colorhash;
+					pointLight.color.setHex( parseInt( colorhash, 16 ) );
+
+					font = parseInt( fonthash );
+					
+					weight = parseInt( weighthash );
+
+					bevelEnabled = parseInt( bevelhash );
+
+					text = decodeURI( texthash );
+
+				} else {
+
+					pointLight.color.setHSL( Math.random(), 1, 0.5 );
+					hex = decimalToHex( pointLight.color.getHex() );
+
+				}
+
+				group = new THREE.Group();
+				group.position.y = 120;
+
+				scene.add( group );
+
+				createText();
+
+				var plane = new THREE.Mesh(
+					new THREE.PlaneBufferGeometry( 10000, 10000 ),
+					new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 0.5, transparent: true } )
+				);
+				plane.position.y = 100;
+				plane.rotation.x = - Math.PI / 2;
+				scene.add( plane );
+
+				// RENDERER
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setClearColor( scene.fog.color );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				// STATS
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+
+				// EVENTS
+
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+				document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+				document.addEventListener( 'keypress', onDocumentKeyPress, false );
+				document.addEventListener( 'keydown', onDocumentKeyDown, false );
+				renderer.domElement.addEventListener( 'drop', onDrop, false );
+			        renderer.domElement.addEventListener("dragover", function (evt) {
+			            evt.preventDefault();
+			        }, false);
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function boolToNum( b ) {
+
+				return b ? 1 : 0;
+
+			}
+
+			function onDrop( e ) {
+				e.preventDefault();
+
+				var file = e.dataTransfer.files[0],
+				    reader = new FileReader();
+
+				reader.onload = function ( event ) {
+					console.log( event.target );
+					eval( event.target.result );
+
+					var index = 0;
+
+					refreshText();
+
+				};
+
+				console.log(file);
+				reader.readAsText(file);
+
+				return false;
+			};
+
+			function onDocumentKeyDown( event ) {
+
+				if ( firstLetter ) {
+
+					firstLetter = false;
+					text = "";
+
+				}
+
+				var keyCode = event.keyCode;
+
+				// backspace
+
+				if ( keyCode == 8 ) {
+
+					event.preventDefault();
+
+					text = text.substring( 0, text.length - 1 );
+					refreshText();
+
+					return false;
+
+				}
+
+			}
+
+			function onDocumentKeyPress( event ) {
+
+				var keyCode = event.which;
+
+				// backspace
+
+				if ( keyCode == 8 ) {
+
+					event.preventDefault();
+
+				} else {
+
+					var ch = String.fromCharCode( keyCode );
+					text += ch;
+
+					refreshText();
+
+				}
+
+			}
+
+			function createText() {
+
+				uniforms = {
+
+					amplitude: { type: "f", value: 5.0 },
+					opacity:   { type: "f", value: 0.3 },
+					color:     { type: "c", value: new THREE.Color( 0xffffff ) }
+
+				};
+
+				var shaderMaterial = new THREE.ShaderMaterial( {
+
+					uniforms:       uniforms,
+					vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+					fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+					blending:       THREE.AdditiveBlending,
+					depthTest:      false,
+					transparent:    true
+
+				});
+
+				textGeo = new THREE.TextGeometry( text, {
+
+					size: size,
+					height: height,
+					curveSegments: curveSegments,
+
+					font: font,
+					weight: weight,
+					style: style,
+
+					bevelThickness: bevelThickness,
+					bevelSize: bevelSize,
+					bevelEnabled: bevelEnabled,
+					bevelSegments: bevelSegments,
+
+					steps: steps,
+					material: 0,
+					extrudeMaterial: 1
+
+				});
+
+				textGeo.center();
+
+				var vertices = textGeo.vertices;
+
+				var buffergeometry = new THREE.BufferGeometry();
+
+				var position = new THREE.Float32Attribute( vertices.length * 3, 3 ).copyVector3sArray( vertices );
+				buffergeometry.addAttribute( 'position', position )
+
+				var displacement = new THREE.Float32Attribute( vertices.length * 3, 3 );
+				buffergeometry.addAttribute( 'displacement', displacement );
+
+				var customColor = new THREE.Float32Attribute( vertices.length * 3, 3 );
+				buffergeometry.addAttribute( 'customColor', customColor );
+
+				var color = new THREE.Color( 0xffffff );
+
+				for( var i = 0, l = customColor.count; i < l; i ++ ) {
+
+					color.setHSL( i / l, 0.5, 0.5 );
+					color.toArray( customColor.array, i * customColor.itemSize );
+
+				}
+
+				textGeo.center();
+				textGeo.computeBoundingBox();
+				textGeo.computeVertexNormals();
+
+				var centerOffset = 0 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+
+				textMesh1 = new THREE.Line( buffergeometry, shaderMaterial );
+
+				textMesh1.position.x = centerOffset;
+				textMesh1.position.y = hover;
+				textMesh1.position.z = 0;
+
+				group.add( textMesh1 );
+
+			}
+
+			function refreshText() {
+
+				group.remove( textMesh1 );
+
+				if ( !text ) return;
+
+				createText();
+
+			}
+
+			function onDocumentMouseDown( event ) {
+
+				event.preventDefault();
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+				document.addEventListener( 'mouseout', onDocumentMouseOut, false );
+
+				mouseXOnMouseDown = event.clientX - windowHalfX;
+				targetRotationOnMouseDown = targetRotation;
+
+			}
+
+			function onDocumentMouseMove( event ) {
+
+				mouseX = event.clientX - windowHalfX;
+
+				targetRotation = targetRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * 0.02;
+
+			}
+
+			function onDocumentMouseUp( event ) {
+
+				document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
+				document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
+
+			}
+
+			function onDocumentMouseOut( event ) {
+
+				document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
+				document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
+
+			}
+
+			function onDocumentTouchStart( event ) {
+
+				if ( event.touches.length == 1 ) {
+
+					event.preventDefault();
+
+					mouseXOnMouseDown = event.touches[ 0 ].pageX - windowHalfX;
+					targetRotationOnMouseDown = targetRotation;
+
+				}
+
+			}
+
+			function onDocumentTouchMove( event ) {
+
+				if ( event.touches.length == 1 ) {
+
+					event.preventDefault();
+
+					mouseX = event.touches[ 0 ].pageX - windowHalfX;
+					targetRotation = targetRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * 0.05;
+
+				}
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+
+				stats.update();
+
+			}
+
+			
+			function render() {
+				
+				var time = Date.now() * 0.001;
+
+				uniforms.amplitude.value = Math.sin( 0.5 * time );
+				uniforms.color.value.offsetHSL( 0.0005, 0, 0 );
+
+				var attributes = textMesh1.geometry.attributes;
+				var array = attributes.displacement.array;
+
+				for ( var i = 0, l = array.length; i < l; i += 3 ) {
+
+					array[ i     ] += 0.3 * ( 0.5 - Math.random() );
+					array[ i + 1 ] += 0.3 * ( 0.5 - Math.random() );
+					array[ i + 2 ] += 0.3 * ( 0.5 - Math.random() );
+
+				}
+
+				attributes.displacement.needsUpdate = true;
+
+				group.rotation.y += ( targetRotation - group.rotation.y ) * 0.05;
+
+				camera.lookAt( cameraTarget );
+
+				renderer.clear();
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
+</html>

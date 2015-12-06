@@ -1,0 +1,22 @@
+body {
+	background-color: #000;
+	font-family: Monospace;
+	color: #fff;
+	margin: 0px;
+	overflow: hidden;
+}
+
+a {
+	color: #0080bb;
+}	
+
+#menu {
+	text-align:center;
+	height: 10%;
+	padding-bottom: 20px;
+}
+
+#canvas {
+	text-align:center;
+} 
+	
