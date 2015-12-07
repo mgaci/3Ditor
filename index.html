@@ -31,6 +31,7 @@
 		<script src="utils/Detector.js"></script>
 		<script src="utils/TextGeometry.js"></script>
 		<script src="utils/FontUtils.js"></script>
+		<script src="utils/stats.min.js"></script>
  
 		<script src="fonts/droid_sans_bold.typeface.js"></script>
 		
@@ -78,7 +79,7 @@
 
 			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-			var container, color;
+			var container, color, stats;
 
 			var camera, scene, renderer;
 
@@ -149,6 +150,13 @@
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
+
+				// STATS
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
 
 				// EVENTS
 
@@ -422,6 +430,8 @@
 				requestAnimationFrame( animate );
 
 				render();
+
+				stats.update();
 			}
 
 			
