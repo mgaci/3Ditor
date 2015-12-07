@@ -157,6 +157,9 @@
 				document.addEventListener( 'touchmove', onDocumentTouchMove, false );
 				document.addEventListener( 'keypress', onDocumentKeyPress, false );
 				document.addEventListener( 'keydown', onDocumentKeyDown, false );
+
+				document.addEventListener( 'mousewheel', onDocumentScroll, false);
+
 				renderer.domElement.addEventListener( 'drop', onDrop, false );
 			        renderer.domElement.addEventListener("dragover", function (evt) {
 			            evt.preventDefault();
@@ -288,7 +291,7 @@
 
 				});
 
-				textGeo.center();
+				textGeo.computeBoundingBox();
 
 				var vertices = textGeo.vertices;
 
@@ -311,8 +314,12 @@
 					color.toArray( customColor.array, i * customColor.itemSize );
 
 				}
+
+				var centerOffset = -0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
 								
 				textMesh1 = new THREE.Line( buffergeometry, shaderMaterial );
+
+				textMesh1.position.x = centerOffset;
 
 				group.add( textMesh1 );
 
@@ -387,6 +394,25 @@
 					mouseX = event.touches[ 0 ].pageX - windowHalfX;
 					targetRotation = targetRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * 0.05;
 
+				}
+
+			}
+
+			function onDocumentScroll( event ) {
+
+				// cross-browser wheel delta
+				var e = window.event || e; // old IE support
+				var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+
+				var x = camera.position.x;
+				var y = camera.position.y;
+				var z = camera.position.z;
+				var c = 10;
+
+				if(delta > 0) {
+					camera.position.set(x, y, z + c);
+				}else{
+					camera.position.set(x, y, z - c);
 				}
 
 			}
