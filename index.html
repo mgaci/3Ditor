@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Particles Font</title>
+		<title>3D Messaging</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -90,7 +90,7 @@
 			var text = "Welcome!",
 
 				height = 20, 
-				size = 70,  
+				size = 62,  
 				hover = 30,  
 
 				curveSegments = 10,   
@@ -165,8 +165,8 @@
 				document.addEventListener( 'touchmove', onDocumentTouchMove, false );
 				document.addEventListener( 'keypress', onDocumentKeyPress, false );
 				document.addEventListener( 'keydown', onDocumentKeyDown, false );
-
 				document.addEventListener( 'mousewheel', onDocumentScroll, false);
+				document.addEventListener( 'DOMMouseScroll', onDocumentScroll, false);
 
 				renderer.domElement.addEventListener( 'drop', onDrop, false );
 			        renderer.domElement.addEventListener("dragover", function (evt) {
@@ -407,22 +407,35 @@
 			}
 
 			function onDocumentScroll( event ) {
+				var delta = 0;
+		        if (!event) /* For IE. */
+		                event = window.event;
+		        if (event.wheelDelta) { /* IE/Opera. */
+		                delta = event.wheelDelta/120;
+		        } else if (event.detail) { /* Mozilla. */
+		                delta = -event.detail/3;
+		        }
+		        if (delta)
+		                handle(delta);
+		        if (event.preventDefault){
+		                event.preventDefault();
+						event.returnValue = false;
+				}
+			}
 
-				// cross-browser wheel delta
-				var e = window.event || e; // old IE support
-				var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
-
+			function handle(delta) {
 				var x = camera.position.x;
 				var y = camera.position.y;
 				var z = camera.position.z;
-				var c = 10;
+				var c = 5;
+
+				var timer = new Date().getTime() * 0.0005;
 
 				if(delta > 0) {
 					camera.position.set(x, y, z + c);
 				}else{
 					camera.position.set(x, y, z - c);
 				}
-
 			}
 
 			function animate() {
